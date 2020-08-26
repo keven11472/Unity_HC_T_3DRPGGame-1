@@ -49,6 +49,13 @@ public class MenuManager : MonoBehaviour
             textLoading.text = "載入進度：" + (ao.progress / 0.9f * 100).ToString("F2") + "%";   // 載入文字 = "載入進度" + ao.進度 * 100 + "%"
             imgLoading.fillAmount = ao.progress / 0.9f;                                         // 載入吧條 = ao.進度
             yield return null;
+
+            if (ao.progress == 0.9f)                                                            // 如果 ao.進度 等於 0.9
+            {
+                textTip.enabled = true;                                                         // 提示文字.啟動 = 是 - 顯示提示文字
+
+                if (Input.anyKeyDown) ao.allowSceneActivation = true;                           // 如果 按下任意鍵 允許自動載入
+            }
         }
     }
 }
