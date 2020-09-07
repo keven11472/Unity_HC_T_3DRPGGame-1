@@ -33,6 +33,9 @@ public class MenuManager : MonoBehaviour
         StartCoroutine(Loading());      // 啟動協程
     }
 
+    /// <summary>
+    /// 載入場景功能
+    /// </summary>
     private IEnumerator Loading()
     {
         panel.SetActive(true);                                          // 啟動設定(布林值) - true 顯示、false 隱藏
