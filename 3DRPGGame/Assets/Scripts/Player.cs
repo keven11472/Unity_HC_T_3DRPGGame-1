@@ -27,8 +27,9 @@ public class Player : MonoBehaviour
         float h = Input.GetAxis("Horizontal");      // A D & 左 右：A 左 -1，D 右 1，沒按 0
         float v = Input.GetAxis("Vertical");        // S W & 下 上：S 下 -1，W 上 1，沒按 0
 
-        // Vector3 pos = new Vector3(h, 0, v);                      // 要移動的座標 - 世界座標版本
-        Vector3 pos = transform.forward * v + transform.right * h;  // 要移動的座標 - 區域座標版本
+        // Vector3 pos = new Vector3(h, 0, v);                          // 要移動的座標 - 世界座標版本
+        // Vector3 pos = transform.forward * v + transform.right * h;   // 要移動的座標 - 區域座標版本
+        Vector3 pos = cam.forward * v + cam.right * h;                  // 要移動的座標 - 攝影機的區域座標版本
 
         // 剛體.移動作標(本身的座標 + 要移動的座標 * 速度 * 1/50)
         rig.MovePosition(transform.position + pos * speed * Time.fixedDeltaTime);
@@ -36,6 +37,11 @@ public class Player : MonoBehaviour
         ani.SetFloat("移動", Mathf.Abs(v) + Mathf.Abs(h));
     }
     #endregion
+
+    /// <summary>
+    /// 攝影機根物件
+    /// </summary>
+    private Transform cam;
 
     #region 事件：入口
     /// <summary>
@@ -46,6 +52,8 @@ public class Player : MonoBehaviour
         // 取得元件<泛型>() - 泛型 任何類型
         ani = GetComponent<Animator>();
         rig = GetComponent<Rigidbody>();
+
+        cam = GameObject.Find("攝影機根物件").transform;  // 遊戲物件.尋找("物件名稱") - 建議不要在 Update 內使用
     }
 
     /// <summary>
