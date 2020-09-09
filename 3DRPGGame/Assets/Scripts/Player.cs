@@ -39,6 +39,7 @@ public class Player : MonoBehaviour
         // 如果有控制再轉向：避免沒移動時轉回原點
         if (h != 0 || v != 0)
         {
+            pos.y = 0;                                                                                      // 鎖定 Y 軸 避免吃土
             Quaternion angle = Quaternion.LookRotation(pos);                                                // 將前往的座標資訊轉為角度
             transform.rotation = Quaternion.Slerp(transform.rotation, angle, turn * Time.fixedDeltaTime);   // 角度插值
         }
