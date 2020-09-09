@@ -35,6 +35,13 @@ public class Player : MonoBehaviour
         rig.MovePosition(transform.position + pos * speed * Time.fixedDeltaTime);
         // 動畫.設定浮點數("參數名稱"，前後 + 左右 的 絕對值)
         ani.SetFloat("移動", Mathf.Abs(v) + Mathf.Abs(h));
+
+        // 如果有控制再轉向：避免沒移動時轉回原點
+        if (h != 0 || v != 0)
+        {
+            Quaternion angle = Quaternion.LookRotation(pos);                                                // 將前往的座標資訊轉為角度
+            transform.rotation = Quaternion.Slerp(transform.rotation, angle, turn * Time.fixedDeltaTime);   // 角度插值
+        }
     }
     #endregion
 

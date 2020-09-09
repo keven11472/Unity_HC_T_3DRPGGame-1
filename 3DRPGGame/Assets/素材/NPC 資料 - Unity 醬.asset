@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65f35a608d5805d47bb8c08bc484fe2f, type: 3}
+  m_Name: "NPC \u8CC7\u6599 - Unity \u91AC"
+  m_EditorClassIdentifier: 
+  speed: 0.5
+  soundType: {fileID: 0}
+  count: 20
+  dialogs:
+  - "\u55E8\uFF0C\u4F60\u597D\uFF0C\u53EF\u4EE5\u5E6B\u6211\u6253\u5012\u524D\u9762\u7684\u77F3\u982D\u4EBA\u4E26\u4E14\u53D6\u5F97\u77F3\u982D
+    20 \u9846\u55CE\uFF1F"
+  - "\u54A6\uFF1F\u4F60\u9084\u6C92\u62FF\u5230 20 \u9846\u77F3\u982D\u5594\uFF0C\u52A0\u6CB9~"
+  - "\u592A\u611F\u8B1D\u5566\uFF01"
+  state: 0
