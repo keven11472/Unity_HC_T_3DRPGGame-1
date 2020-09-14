@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -13,12 +14,27 @@ public class Player : MonoBehaviour
     public float hp = 250;
     [Header("魔力"), Range(0, 500)]
     public float mp = 50;
+    [Header("吃道具音效")]
+    public AudioClip soundProp;
+    [Header("任務數量")]
+    public Text textMission;
+
+    private int count;
 
     public float exp;
     public int lv = 1;
 
+    // 在屬性 (Inspector) 面板上隱藏
+    [HideInInspector]
+    /// <summary>
+    /// 是否停止
+    /// </summary>
+    public bool stop;
+
     private Animator ani;
     private Rigidbody rig;
+    private AudioSource aud;
+    private NPC npc;
     #endregion
 
     #region 方法：功能
@@ -44,6 +60,12 @@ public class Player : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, angle, turn * Time.fixedDeltaTime);   // 角度插值
         }
     }
+
+    private void EatProp()
+    {
+        count++;                                                                // 遞增
+        textMission.text = "骷髏頭：" + count + " / " + npc.data.count;          // 更新介面
+    }
     #endregion
 
     /// <summary>
@@ -60,8 +82,11 @@ public class Player : MonoBehaviour
         // 取得元件<泛型>() - 泛型 任何類型
         ani = GetComponent<Animator>();
         rig = GetComponent<Rigidbody>();
+        aud = GetComponent<AudioSource>();
 
-        cam = GameObject.Find("攝影機根物件").transform;  // 遊戲物件.尋找("物件名稱") - 建議不要在 Update 內使用
+        cam = GameObject.Find("攝影機根物件").transform;     // 遊戲物件.尋找("物件名稱") - 建議不要在 Update 內使用
+
+        npc = FindObjectOfType<NPC>();                      // 取得 NPC
     }
 
     /// <summary>
@@ -70,7 +95,19 @@ public class Player : MonoBehaviour
     /// </summary>
     private void FixedUpdate()
     {
+        if (stop) return;           // 如果 停止 就跳出
+
         Move();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag == "骷髏頭")
+        {
+            aud.PlayOneShot(soundProp);             // 播放音效
+            Destroy(collision.gameObject);          // 刪除道具
+            EatProp();                              // 呼叫吃道具
+        }
     }
     #endregion
 }

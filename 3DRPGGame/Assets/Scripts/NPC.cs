@@ -12,12 +12,22 @@ public class NPC : MonoBehaviour
     public Text textName;
     [Header("對話內容")]
     public Text textContent;
+    [Header("第一段對話完要顯示的物件")]
+    public GameObject objectShow;
+    [Header("任務資訊")]
+    public RectTransform rectMission;
 
     private AudioSource aud;
+    private Player player;
 
     private void Awake()
     {
         aud = GetComponent<AudioSource>();
+        
+        // 透過類行尋找物件<類型>() ※ 僅限此類型在場景上只有一個
+        player = FindObjectOfType<Player>();
+
+        data.state = StateNPC.NoMission;                        // 預設為無任務狀態
     }
 
     /// <summary>
@@ -25,9 +35,11 @@ public class NPC : MonoBehaviour
     /// </summary>
     private IEnumerator Type()
     {
+        player.stop = true;                                     // 停止
+
         textContent.text = "";                                  // 對話內容清空
 
-        string dialog = data.dialogs[0];                        // 取得要顯示的對話
+        string dialog = data.dialogs[(int)data.state];          // 取得要顯示的對話 ※取得列舉的整數方式：(int)列舉
 
         for (int i = 0; i < dialog.Length; i++)                 // 迴圈執行對話每個字
         {
@@ -35,11 +47,33 @@ public class NPC : MonoBehaviour
             aud.PlayOneShot(data.soundType, 0.5f);              // 播放打字音效
             yield return new WaitForSeconds(data.speed);        // 等待
         }
+
+        player.stop = false;                                    // 恢復
+
+        NoMission();
     }
 
+    /// <summary>
+    /// 第一階段：尚未取得任務
+    /// </summary>
     private void NoMission()
     {
+        data.state = StateNPC.Missioning;                       // 進入任務進行中階段
+        objectShow.SetActive(true);                             // 顯示物件
 
+        StartCoroutine(ShowMission());                          // 啟動顯示任務協程
+    }
+
+    /// <summary>
+    /// 顯示任務
+    /// </summary>
+    private IEnumerator ShowMission()
+    {
+        while (rectMission.anchoredPosition.x > 0)                                  // 當 X 大於 0 持續執行
+        {
+            rectMission.anchoredPosition -= new Vector2(800 * Time.deltaTime, 0);   // X 遞減
+            yield return null;                                                      // 等待
+        }
     }
 
     private void Missioning()
@@ -85,7 +119,7 @@ public class NPC : MonoBehaviour
     /// </summary>
     private void OnTriggerEnter(Collider other)
     {
-        if (other.name == "Unity 藍") DialogStart();
+        if (other.name == "玩家") DialogStart();
     }
 
     /// <summary>
@@ -93,7 +127,7 @@ public class NPC : MonoBehaviour
     /// </summary>
     private void OnTriggerExit(Collider other)
     {
-        if (other.name == "Unity 藍") DialogStop();
+        if (other.name == "玩家") DialogStop();
     }
 
     /// <summary>
@@ -102,6 +136,6 @@ public class NPC : MonoBehaviour
     /// <param name="other"></param>
     private void OnTriggerStay(Collider other)
     {
-        if (other.name == "Unity 藍") LookAtPlayer(other);
+        if (other.name == "玩家") LookAtPlayer(other);
     }
 }
