@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0.035
   soundType: {fileID: 8300000, guid: 1df348400da0ae74297e8ff9d5fbcf93, type: 3}
-  count: 20
+  count: 5
   dialogs:
   - "\u55E8\uFF0C\u4F60\u597D\uFF0C\u53EF\u4EE5\u5E6B\u6211\u6253\u5012\u524D\u9762\u7684\u77F3\u982D\u4EBA\u4E26\u4E14\u53D6\u5F97\u77F3\u982D
     20 \u9846\u55CE\uFF1F"

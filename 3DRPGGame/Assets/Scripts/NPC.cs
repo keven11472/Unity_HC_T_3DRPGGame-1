@@ -18,11 +18,13 @@ public class NPC : MonoBehaviour
     public RectTransform rectMission;
 
     private AudioSource aud;
+    private Animator ani;
     private Player player;
 
     private void Awake()
     {
         aud = GetComponent<AudioSource>();
+        ani = GetComponent<Animator>();
         
         // 透過類行尋找物件<類型>() ※ 僅限此類型在場景上只有一個
         player = FindObjectOfType<Player>();
@@ -35,6 +37,8 @@ public class NPC : MonoBehaviour
     /// </summary>
     private IEnumerator Type()
     {
+        PlayAnimation();
+
         player.stop = true;                                     // 停止
 
         textContent.text = "";                                  // 對話內容清空
@@ -54,10 +58,21 @@ public class NPC : MonoBehaviour
     }
 
     /// <summary>
+    /// 播放動畫
+    /// </summary>
+    private void PlayAnimation()
+    {
+        if (data.state != StateNPC.Finish) ani.SetBool("對話開關", true);            // 如果 不是 完成狀態 播放對畫動畫
+        else ani.SetTrigger("完成觸發");                                             // 否則 播放完成動畫
+    }
+
+    /// <summary>
     /// 第一階段：尚未取得任務
     /// </summary>
     private void NoMission()
     {
+        if (data.state != StateNPC.NoMission) return;           // 如果 狀態 不是 未接任務 就 跳出
+
         data.state = StateNPC.Missioning;                       // 進入任務進行中階段
         objectShow.SetActive(true);                             // 顯示物件
 
@@ -81,9 +96,13 @@ public class NPC : MonoBehaviour
 
     }
 
-    private void Finish()
+    /// <summary>
+    /// 結束任務
+    /// </summary>
+    public void Finish()
     {
-
+        // 切換為完成狀態
+        data.state = StateNPC.Finish;
     }
 
     /// <summary>
@@ -102,6 +121,7 @@ public class NPC : MonoBehaviour
     private void DialogStop()
     {
         panel.SetActive(false);
+        ani.SetBool("對話開關", false);
     }
 
     /// <summary>

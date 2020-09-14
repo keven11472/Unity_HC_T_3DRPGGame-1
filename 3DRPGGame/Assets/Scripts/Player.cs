@@ -65,6 +65,9 @@ public class Player : MonoBehaviour
     {
         count++;                                                                // 遞增
         textMission.text = "骷髏頭：" + count + " / " + npc.data.count;          // 更新介面
+
+        // 如果 數量 等於 NPC 需求數量 就 呼叫 NPC 結束任務
+        if (count == npc.data.count) npc.Finish();
     }
     #endregion
 
