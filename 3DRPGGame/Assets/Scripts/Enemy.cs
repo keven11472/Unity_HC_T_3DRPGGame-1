@@ -20,9 +20,13 @@ public class Enemy : MonoBehaviour
     public float rangeAttack = 1.5f;
     [Header("攻擊冷卻時間"), Range(0, 10)]
     public float cd = 3.5f;
+    [Header("面向玩家的速度"), Range(0, 100)]
+    public float turn = 10;
+
 
     private NavMeshAgent nma;
     private Animator ani;
+    private Rigidbody rig;
     private Player player;
     /// <summary>
     /// 計時器
@@ -49,12 +53,55 @@ public class Enemy : MonoBehaviour
     /// </summary>
     private void Attack()
     {
+        Quaternion look = Quaternion.LookRotation(player.transform.position - transform.position);      // 取得面向的角度 B 角度 = 四元.面向角度(玩家 - 自己)
+        transform.rotation = Quaternion.Slerp(transform.rotation, look, Time.deltaTime * turn);         // 怪物.角度 = 四元.差值(A 角度，B 角度，百分比)
+
         timer += Time.deltaTime;                // 累加時間
 
         if (timer >= cd)                        // 如果 計時器 >= 冷卻時間
         {
             timer = 0;                          // 計時器歸零
             ani.SetTrigger("攻擊觸發");          // 攻擊動畫
+        }
+    }
+
+    /// <summary>
+    /// 受傷
+    /// </summary>
+    /// <param name="damage">傷害值</param>
+    /// <param name="direction">擊退方向</param>
+    public void Hit(float damage, Transform direction)
+    {
+        hp -= damage;
+        rig.AddForce(direction.forward * 30 + direction.up * 50);
+
+        ani.SetTrigger("受傷觸發");
+
+        if (hp <= 0) Dead();            // 如果 血量 <= 0 就 死亡
+    }
+
+    /// <summary>
+    /// 死亡
+    /// </summary>
+    private void Dead()
+    {
+        // this.enabled = false; // 第一種寫法，this 此腳本
+        enabled = false;                                        // 此腳本.啟動 = 否
+        ani.SetBool("死亡開關", true);                           // 死亡動畫
+        DropProp();
+    }
+
+    /// <summary>
+    /// 掉落道具
+    /// </summary>
+    private void DropProp()
+    {
+        float r = Random.Range(0f, 1f);                                                         // 取得隨機值介於 0 ~ 1
+
+        if (r <= prop)                                                                          // 如果 隨機值 小於等於 機率
+        {
+            // 生成(物件，座標，角度)
+            Instantiate(skull, transform.position + transform.up * 1.5f, transform.rotation);         
         }
     }
     #endregion
@@ -64,6 +111,7 @@ public class Enemy : MonoBehaviour
     {
         nma = GetComponent<NavMeshAgent>();
         ani = GetComponent<Animator>();
+        rig = GetComponent<Rigidbody>();
 
         player = FindObjectOfType<Player>();
 
@@ -84,8 +132,6 @@ public class Enemy : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        print(other.name);
-
         if (other.name == "玩家")
         {
             other.GetComponent<Player>().Hit(attack, transform);

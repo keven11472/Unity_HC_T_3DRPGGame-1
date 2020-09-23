@@ -18,13 +18,18 @@ public class Player : MonoBehaviour
     public AudioClip soundProp;
     [Header("任務數量")]
     public Text textMission;
-    
-
-    private int count;
-    
+    [Header("吧條")]
+    public Image barHp;
+    public Image barMp;
+    public Image barExp;
 
     public float exp;
     public int lv = 1;
+
+    private int count;
+    private float maxHp;
+    private float maxMp;
+    private float maxExp;
 
     // 在屬性 (Inspector) 面板上隱藏
     [HideInInspector]
@@ -42,15 +47,6 @@ public class Player : MonoBehaviour
     /// </summary>
     private Transform cam;
     #endregion
-
-    [Header("吧條")]
-    public Image barHp;
-    public Image barMp;
-    public Image barExp;
-
-    private float maxHp;
-    private float maxMp;
-    private float maxExp;
 
     #region 方法：功能
     private void Move()
@@ -76,6 +72,9 @@ public class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 吃道具
+    /// </summary>
     private void EatProp()
     {
         count++;                                                                // 遞增
@@ -97,6 +96,29 @@ public class Player : MonoBehaviour
 
         barHp.fillAmount = hp / maxHp;
         ani.SetTrigger("受傷觸發");
+
+        if (hp <= 0) Dead();            // 如果 血量 <= 0 就 死亡
+    }
+
+    /// <summary>
+    /// 死亡
+    /// </summary>
+    private void Dead()
+    {
+        // this.enabled = false; // 第一種寫法，this 此腳本
+        enabled = false;                                        // 此腳本.啟動 = 否
+        ani.SetBool("死亡開關", true);                           // 死亡動畫
+    }
+
+    /// <summary>
+    /// 攻擊
+    /// </summary>
+    private void Attack()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            ani.SetTrigger("攻擊觸發");
+        }
     }
     #endregion
 
@@ -130,6 +152,11 @@ public class Player : MonoBehaviour
         Move();
     }
 
+    private void Update()
+    {
+        Attack();
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "骷髏頭")
@@ -137,6 +164,14 @@ public class Player : MonoBehaviour
             aud.PlayOneShot(soundProp);             // 播放音效
             Destroy(collision.gameObject);          // 刪除道具
             EatProp();                              // 呼叫吃道具
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "怪物")
+        {
+            other.GetComponent<Enemy>().Hit(attack, transform);
         }
     }
     #endregion

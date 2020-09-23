@@ -37,6 +37,11 @@ public class CameraControl : MonoBehaviour
         transform.rotation = Quaternion.Euler(rot.x, 180 + rot.y, rot.z);
     }
 
+    private void Awake()
+    {
+        Cursor.visible = false;         // 指標.可視性 = 否 (隱藏指標)
+    }
+
     private void LateUpdate()
     {
         Track();
