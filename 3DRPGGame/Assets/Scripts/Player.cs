@@ -23,53 +23,20 @@ public class Player : MonoBehaviour
     public Image barMp;
     public Image barExp;
     public Text textLv;
+    [Header("技能：流星雨")]
+    public GameObject rock;
+    public Transform pointRock;
+    public float costRock = 20;
+    public float damageRock = 100;
 
-    public int lv = 1;              // 等級
-    public float exp;               // 目前經驗值
-    public float maxExp = 100;      // 最大經驗值 (升級所需要)
+    private int lv = 1;              // 等級
+    private float exp;               // 目前經驗值
+    private float maxExp = 100;      // 最大經驗值 (升級所需要)
 
     private int count;
     private float maxHp;
     private float maxMp;
-
-    public float[] exps;            // 浮點數陣列
-
-    /// <summary>
-    /// 經驗值
-    /// </summary>
-    /// <param name="expGet">取得的經驗值</param>
-    public void Exp(float expGet)
-    {
-        exp += expGet;                          // 經驗值累加
-        barExp.fillAmount = exp / maxExp;       // 更新經驗值吧條
-
-        while (exp >= maxExp) LevelUp();        // 當 目前經驗值 >= 最大經驗值 就 升級
-    }
-
-    /// <summary>
-    /// 升級
-    /// </summary>
-    private void LevelUp()
-    {
-        lv++;                           // 等級遞增
-        textLv.text = "Lv " + lv;       // 更新等級介面
-
-        // 升級後數值提升
-        maxHp += 20;
-        maxMp += 5;
-        attack += 10;
-
-        // 升級後血量魔力全滿
-        hp = maxHp;
-        mp = maxMp;
-
-        barHp.fillAmount = 1;
-        barMp.fillAmount = 1;
-
-        exp -= maxExp;                      // 把多餘的經驗值補回去 120 -= 100 (20)
-        maxExp = exps[lv - 1];              // 最大經驗值 = 經驗值需求[等級 - 1]
-        barExp.fillAmount = exp / maxExp;   // 更新經驗值長度 = 目前經驗值 / 最大經驗值
-    }
+    private float[] exps;            // 浮點數陣列
 
     // 在屬性 (Inspector) 面板上隱藏
     [HideInInspector]
@@ -160,6 +127,57 @@ public class Player : MonoBehaviour
             ani.SetTrigger("攻擊觸發");
         }
     }
+
+    /// <summary>
+    /// 經驗值
+    /// </summary>
+    /// <param name="expGet">取得的經驗值</param>
+    public void Exp(float expGet)
+    {
+        exp += expGet;                          // 經驗值累加
+        barExp.fillAmount = exp / maxExp;       // 更新經驗值吧條
+
+        while (exp >= maxExp) LevelUp();        // 當 目前經驗值 >= 最大經驗值 就 升級
+    }
+
+    /// <summary>
+    /// 升級
+    /// </summary>
+    private void LevelUp()
+    {
+        lv++;                           // 等級遞增
+        textLv.text = "Lv " + lv;       // 更新等級介面
+
+        // 升級後數值提升
+        maxHp += 20;
+        maxMp += 5;
+        attack += 10;
+
+        // 升級後血量魔力全滿
+        hp = maxHp;
+        mp = maxMp;
+
+        barHp.fillAmount = 1;
+        barMp.fillAmount = 1;
+
+        exp -= maxExp;                      // 把多餘的經驗值補回去 120 -= 100 (20)
+        maxExp = exps[lv - 1];              // 最大經驗值 = 經驗值需求[等級 - 1]
+        barExp.fillAmount = exp / maxExp;   // 更新經驗值長度 = 目前經驗值 / 最大經驗值
+    }
+
+    /// <summary>
+    /// 技能：流星雨
+    /// </summary>
+    private void SkillRock()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse1) && mp >= costRock)                     // 如果 按下 右鍵 並且 魔力 >= 技能消耗
+        {
+            ani.SetTrigger("技能觸發");                                              // 播放動畫
+            Instantiate(rock, pointRock.position, pointRock.rotation);              // 生成(物件，座標，角度)
+            mp -= costRock;                                                         // 扣除消耗量
+            barMp.fillAmount = mp / maxMp;                                          // 更新 魔力 吧條
+        }
+    }
     #endregion
 
     #region 事件：入口
@@ -201,7 +219,10 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        Attack();
+        Attack();                                   // 攻擊
+        SkillRock();                                // 施放技能
+        Restore(hp, restoreHp, maxHp, barHp);       // 恢復血量
+        Restore(mp, restoreMp, maxMp, barMp);       // 恢復魔力
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -222,4 +243,30 @@ public class Player : MonoBehaviour
         }
     }
     #endregion
+
+    [Header("回魔量 / 每秒")]
+    public float restoreMp = 5;
+    [Header("回血量 / 每秒")]
+    public float restoreHp = 10;
+
+    private void RestoreMp()
+    {
+        mp += restoreMp * Time.deltaTime;           // 每秒恢復
+        mp = Mathf.Clamp(mp, 0, maxMp);             // 夾住數值(數值，0，最大值)
+        barMp.fillAmount = mp / maxMp;              // 更新介面
+    }
+
+    /// <summary>
+    /// 恢復數值
+    /// </summary>
+    /// <param name="value">要恢復的值</param>
+    /// <param name="restore">每秒恢復多少</param>
+    /// <param name="max">要恢復的值最大值</param>
+    /// <param name="bar">要更新的吧條</param>
+    private void Restore(float value, float restore, float max, Image bar)
+    {
+        value += restore * Time.deltaTime;
+        value = Mathf.Clamp(value, 0, max);
+        bar.fillAmount = value / max;
+    }
 }

@@ -138,5 +138,18 @@ public class Enemy : MonoBehaviour
             other.GetComponent<Player>().Hit(attack, transform);
         }
     }
+
+    /// <summary>
+    /// 有勾選 Collision 與 Send Collision Messages 的粒子碰到後會執行一次
+    /// </summary>
+    /// <param name="other"></param>
+    private void OnParticleCollision(GameObject other)
+    {
+        if (other.name == "碎石")
+        {
+            float damage = player.damageRock;   // 取得流星雨的傷害值
+            Hit(damage, player.transform);      // 受傷
+        }
+    }
     #endregion
 }
