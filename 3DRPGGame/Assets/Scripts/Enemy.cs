@@ -10,7 +10,7 @@ public class Enemy : MonoBehaviour
     public float attack = 20f;
     [Header("血量"), Range(0, 1000)]
     public float hp = 350f;
-    [Header("經驗值"), Range(0, 1000)]
+    [Header("經驗值"), Range(0, 1000000)]
     public float exp = 30f;
     [Header("掉落道具的機率"), Range(0f, 1f)]
     public float prop = 0.3f;
@@ -23,7 +23,6 @@ public class Enemy : MonoBehaviour
     [Header("面向玩家的速度"), Range(0, 100)]
     public float turn = 10;
 
-
     private NavMeshAgent nma;
     private Animator ani;
     private Rigidbody rig;
@@ -32,7 +31,7 @@ public class Enemy : MonoBehaviour
     /// 計時器
     /// </summary>
     private float timer;
-    #endregion
+    #endregion　
 
     #region 方法
     /// <summary>
@@ -81,7 +80,7 @@ public class Enemy : MonoBehaviour
     }
 
     /// <summary>
-    /// 死亡
+    /// 死亡：關閉腳本、碰撞、播放動畫、呼叫掉道具、傳經驗值給玩家
     /// </summary>
     private void Dead()
     {
@@ -90,6 +89,7 @@ public class Enemy : MonoBehaviour
         GetComponent<Collider>().enabled = false;               // 取得碰撞汽.啟動 = 否 (關閉碰撞器)
         ani.SetBool("死亡開關", true);                           // 死亡動畫
         DropProp();
+        player.Exp(exp);                                        // 傳經驗值
     }
 
     /// <summary>
