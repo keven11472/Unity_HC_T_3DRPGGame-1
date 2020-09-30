@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class Player : MonoBehaviour
 {
@@ -14,8 +15,11 @@ public class Player : MonoBehaviour
     public float hp = 250;
     [Header("魔力"), Range(0, 500)]
     public float mp = 50;
-    [Header("吃道具音效")]
+    [Header("音效")]
     public AudioClip soundProp;
+    public AudioClip soundMeteor;
+    public AudioClip soundAttack;
+    public AudioClip soundHurt;
     [Header("任務數量")]
     public Text textMission;
     [Header("吧條")]
@@ -28,6 +32,13 @@ public class Player : MonoBehaviour
     public Transform pointRock;
     public float costRock = 20;
     public float damageRock = 100;
+    [Header("回魔量 / 每秒")]
+    public float restoreMp = 5;
+    [Header("回血量 / 每秒")]
+    public float restoreHp = 10;
+    [Header("結束遊戲畫面")]
+    public CanvasGroup final;
+    public Text textFinalTitle;
 
     private int lv = 1;              // 等級
     private float exp;               // 目前經驗值
@@ -53,6 +64,13 @@ public class Player : MonoBehaviour
     /// 攝影機根物件
     /// </summary>
     private Transform cam;
+
+    private void RestoreMp()
+    {
+        mp += restoreMp * Time.deltaTime;           // 每秒恢復
+        mp = Mathf.Clamp(mp, 0, maxMp);             // 夾住數值(數值，0，最大值)
+        barMp.fillAmount = mp / maxMp;              // 更新介面
+    }
     #endregion
 
     #region 方法：功能
@@ -89,6 +107,7 @@ public class Player : MonoBehaviour
 
         // 如果 數量 等於 NPC 需求數量 就 呼叫 NPC 結束任務
         if (count == npc.data.count) npc.Finish();
+        aud.PlayOneShot(soundProp);
     }
 
     /// <summary>
@@ -105,6 +124,8 @@ public class Player : MonoBehaviour
         ani.SetTrigger("受傷觸發");
 
         if (hp <= 0) Dead();            // 如果 血量 <= 0 就 死亡
+
+        aud.PlayOneShot(soundHurt);
     }
 
     /// <summary>
@@ -114,7 +135,29 @@ public class Player : MonoBehaviour
     {
         // this.enabled = false; // 第一種寫法，this 此腳本
         enabled = false;                                        // 此腳本.啟動 = 否
-        ani.SetBool("死亡開關", true);                           // 死亡動畫
+        ani.SetBool("死亡開關", true);                          // 死亡動畫
+
+        StartCoroutine(ShowFinal());                            // 啟動結束畫面協成
+    }
+
+    /// <summary>
+    /// 顯示結束畫面
+    /// </summary>
+    private IEnumerator ShowFinal()
+    {
+        yield return new WaitForSeconds(0.5f);            // 等待 0.5 秒
+        
+        textFinalTitle.text = "任務失敗，請重新挑戰";     // 更新標題
+
+        while (final.alpha <1)                            // 當 透明度 小於 1 時累加
+        {
+            final.alpha += 0.5f * Time.deltaTime;
+            yield return null;
+        }
+
+        Cursor.visible = true;                            // 顯示滑鼠
+        final.interactable = true;                        // 結束畫面可互動
+        final.blocksRaycasts = true;                      // 開啟滑鼠阻擋
     }
 
     /// <summary>
@@ -122,6 +165,7 @@ public class Player : MonoBehaviour
     /// </summary>
     private void Attack()
     {
+        aud.PlayOneShot(soundAttack);
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             ani.SetTrigger("攻擊觸發");
@@ -170,6 +214,7 @@ public class Player : MonoBehaviour
     /// </summary>
     private void SkillRock()
     {
+        aud.PlayOneShot(soundMeteor);
         if (Input.GetKeyDown(KeyCode.Mouse1) && mp >= costRock)                     // 如果 按下 右鍵 並且 魔力 >= 技能消耗
         {
             ani.SetTrigger("技能觸發");                                              // 播放動畫
@@ -177,6 +222,21 @@ public class Player : MonoBehaviour
             mp -= costRock;                                                         // 扣除消耗量
             barMp.fillAmount = mp / maxMp;                                          // 更新 魔力 吧條
         }
+    }
+
+    // 參數前方加入 ref 會變成傳址，將整筆資料傳過來，可以改變傳過來的資料
+    /// <summary>
+    /// 恢復數值
+    /// </summary>
+    /// <param name="value">要恢復的值</param>
+    /// <param name="restore">每秒恢復多少</param>
+    /// <param name="max">要恢復的值最大值</param>
+    /// <param name="bar">要更新的吧條</param>
+    private void Restore(ref float value, float restore, float max, Image bar)
+    {
+        value += restore * Time.deltaTime;
+        value = Mathf.Clamp(value, 0, max);
+        bar.fillAmount = value / max;
     }
     #endregion
 
@@ -214,6 +274,9 @@ public class Player : MonoBehaviour
     {
         if (stop) return;           // 如果 停止 就跳出
 
+        // 如果 第一層的動會名稱 是 攻擊 或者 技能 就跳出
+        if (ani.GetCurrentAnimatorStateInfo(0).IsName("攻擊") || ani.GetCurrentAnimatorStateInfo(0).IsName("技能")) return;
+
         Move();
     }
 
@@ -221,8 +284,8 @@ public class Player : MonoBehaviour
     {
         Attack();                                   // 攻擊
         SkillRock();                                // 施放技能
-        Restore(hp, restoreHp, maxHp, barHp);       // 恢復血量
-        Restore(mp, restoreMp, maxMp, barMp);       // 恢復魔力
+        Restore(ref hp, restoreHp, maxHp, barHp);       // 恢復血量 有 ref 的參數在呼叫時也要添加 ref 關鍵字
+        Restore(ref mp, restoreMp, maxMp, barMp);       // 恢復魔力
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -244,29 +307,7 @@ public class Player : MonoBehaviour
     }
     #endregion
 
-    [Header("回魔量 / 每秒")]
-    public float restoreMp = 5;
-    [Header("回血量 / 每秒")]
-    public float restoreHp = 10;
+ 
 
-    private void RestoreMp()
-    {
-        mp += restoreMp * Time.deltaTime;           // 每秒恢復
-        mp = Mathf.Clamp(mp, 0, maxMp);             // 夾住數值(數值，0，最大值)
-        barMp.fillAmount = mp / maxMp;              // 更新介面
-    }
-
-    /// <summary>
-    /// 恢復數值
-    /// </summary>
-    /// <param name="value">要恢復的值</param>
-    /// <param name="restore">每秒恢復多少</param>
-    /// <param name="max">要恢復的值最大值</param>
-    /// <param name="bar">要更新的吧條</param>
-    private void Restore(float value, float restore, float max, Image bar)
-    {
-        value += restore * Time.deltaTime;
-        value = Mathf.Clamp(value, 0, max);
-        bar.fillAmount = value / max;
-    }
+ 
 }
